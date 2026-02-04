@@ -15,4 +15,4 @@ ln -sf $BASE/outputs   $COMFY/output
 ln -sf $BASE/workflows $COMFY/workflows
 
 cd $COMFY
-python main.py --listen 0.0.0.0 --port 8188
+python3 main.py --listen 0.0.0.0 --port 8188

@@ -15,4 +15,5 @@ ln -sf $BASE/outputs   $COMFY/output
 ln -sf $BASE/workflows $COMFY/workflows
 
 cd $COMFY
+pip3 install -r requirements.txt
 python3 main.py --listen 0.0.0.0 --port 8188

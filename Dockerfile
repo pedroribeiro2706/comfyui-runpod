@@ -4,9 +4,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /workspace
 
 # Sistema
-RUN apt-get update && apt-get install -y \
-    python3 python3-pip git \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -o Acquire::Retries=5 && \
+    apt-get install -y --no-install-recommends \
+    python3 python3-pip git && \
+    rm -rf /var/lib/apt/lists/*
 
 # Python
 RUN pip3 install --upgrade pip && \

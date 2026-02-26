@@ -1,0 +1,396 @@
+{
+  "name": "tLotD",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "tLotD",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 0],
+      "id": "aaaaaaaa-0000-4000-8000-000000000001",
+      "name": "Webhook",
+      "webhookId": "aaaaaaaa-0000-4000-8000-000000000001"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://rest.runpod.io/v1/pods",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"name\": \"tLotD-comfy\",\n  \"imageName\": \"ghcr.io/pedroribeiro2706/comfyui-runpod:latest\",\n  \"gpuTypeIds\": [\"NVIDIA GeForce RTX 4090\"],\n  \"cloudType\": \"SECURE\",\n  \"networkVolumeId\": \"f1yahlb3w9\",\n  \"ports\": [\"8188/http\"],\n  \"containerDiskInGb\": 20,\n  \"volumeMountPath\": \"/workspace\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "RunPod API"
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [240, 0],
+      "id": "aaaaaaaa-0000-4000-8000-000000000002",
+      "name": "Create Pod"
+    },
+    {
+      "parameters": {
+        "amount": 10,
+        "unit": "seconds"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [480, 0],
+      "id": "aaaaaaaa-0000-4000-8000-000000000003",
+      "name": "Wait for Pod"
+    },
+    {
+      "parameters": {
+        "url": "=https://rest.runpod.io/v1/pods/{{ $json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "RunPod API"
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [720, 0],
+      "id": "aaaaaaaa-0000-4000-8000-000000000004",
+      "name": "Get Pod Status"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-pod-running-01",
+              "leftValue": "={{ $json.desiredStatus }}",
+              "rightValue": "RUNNING",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [960, 0],
+      "id": "aaaaaaaa-0000-4000-8000-000000000005",
+      "name": "Is Pod Running?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "assign-baseurl",
+              "name": "baseUrl",
+              "value": "=https://{{ $json.id }}-8188.proxy.runpod.net",
+              "type": "string"
+            },
+            {
+              "id": "assign-podid",
+              "name": "podId",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1200, 0],
+      "id": "aaaaaaaa-0000-4000-8000-000000000006",
+      "name": "Set Pod URL"
+    },
+    {
+      "parameters": {
+        "amount": 60,
+        "unit": "seconds"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1440, 0],
+      "id": "aaaaaaaa-0000-4000-8000-000000000007",
+      "name": "Wait ComfyUI Startup"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.baseUrl }}/prompt",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": {\n    \"1\": {\n      \"inputs\": { \"ckpt_name\": \"v1-5-pruned-emaonly.safetensors\" },\n      \"class_type\": \"CheckpointLoaderSimple\",\n      \"_meta\": { \"title\": \"Load Checkpoint\" }\n    },\n    \"2\": {\n      \"inputs\": {\n        \"text\": \"{{ $('Webhook').item.json.body.prompt }}\",\n        \"clip\": [\"1\", 1]\n      },\n      \"class_type\": \"CLIPTextEncode\",\n      \"_meta\": { \"title\": \"Positive Prompt\" }\n    },\n    \"3\": {\n      \"inputs\": {\n        \"seed\": {{ Math.floor(Math.random() * 9999999999) }},\n        \"steps\": 20,\n        \"cfg\": 8,\n        \"sampler_name\": \"euler\",\n        \"scheduler\": \"simple\",\n        \"denoise\": 1,\n        \"model\": [\"1\", 0],\n        \"positive\": [\"2\", 0],\n        \"negative\": [\"8\", 0],\n        \"latent_image\": [\"4\", 0]\n      },\n      \"class_type\": \"KSampler\",\n      \"_meta\": { \"title\": \"KSampler\" }\n    },\n    \"4\": {\n      \"inputs\": { \"width\": 512, \"height\": 512, \"batch_size\": 1 },\n      \"class_type\": \"EmptyLatentImage\",\n      \"_meta\": { \"title\": \"Empty Latent Image\" }\n    },\n    \"6\": {\n      \"inputs\": { \"samples\": [\"3\", 0], \"vae\": [\"1\", 2] },\n      \"class_type\": \"VAEDecode\",\n      \"_meta\": { \"title\": \"VAE Decode\" }\n    },\n    \"7\": {\n      \"inputs\": { \"filename_prefix\": \"tLotD\", \"images\": [\"6\", 0] },\n      \"class_type\": \"SaveImage\",\n      \"_meta\": { \"title\": \"Save Image\" }\n    },\n    \"8\": {\n      \"inputs\": {\n        \"text\": \"deformed, ugly, low quality, blurry, watermark\",\n        \"clip\": [\"1\", 1]\n      },\n      \"class_type\": \"CLIPTextEncode\",\n      \"_meta\": { \"title\": \"Negative Prompt\" }\n    }\n  }\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1680, 0],
+      "id": "aaaaaaaa-0000-4000-8000-000000000008",
+      "name": "POST to ComfyUI"
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "seconds"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1920, 0],
+      "id": "aaaaaaaa-0000-4000-8000-000000000009",
+      "name": "Wait for Generation"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Set Pod URL').item.json.baseUrl }}/history/{{ $('POST to ComfyUI').item.json.prompt_id }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [2160, 0],
+      "id": "aaaaaaaa-0000-4000-8000-000000000010",
+      "name": "Poll ComfyUI History"
+    },
+    {
+      "parameters": {
+        "jsCode": "const history = $input.first().json;\nconst promptId = $('POST to ComfyUI').item.json.prompt_id;\n\nconst execution = history[promptId];\n\nif (!execution || !execution.outputs || Object.keys(execution.outputs).length === 0) {\n  return [{ json: { done: false } }];\n}\n\nconst saveNode = execution.outputs['7'];\n\nif (!saveNode || !saveNode.images || saveNode.images.length === 0) {\n  return [{ json: { done: false } }];\n}\n\nconst image = saveNode.images[0];\nreturn [{\n  json: {\n    done: true,\n    filename: image.filename,\n    subfolder: image.subfolder || '',\n    type: image.type || 'output'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2400, 0],
+      "id": "aaaaaaaa-0000-4000-8000-000000000011",
+      "name": "Check Generation Done"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-gen-done-01",
+              "leftValue": "={{ $json.done }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2640, 0],
+      "id": "aaaaaaaa-0000-4000-8000-000000000012",
+      "name": "Is Generation Done?"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Set Pod URL').item.json.baseUrl }}/view?filename={{ $json.filename }}&subfolder={{ $json.subfolder }}&type={{ $json.type }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [2880, 0],
+      "id": "aaaaaaaa-0000-4000-8000-000000000013",
+      "name": "Download Image"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "image/png"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [3120, 0],
+      "id": "aaaaaaaa-0000-4000-8000-000000000014",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "amount": 60,
+        "unit": "seconds"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [3360, 0],
+      "id": "aaaaaaaa-0000-4000-8000-000000000015",
+      "name": "Wait Before Cleanup"
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://rest.runpod.io/v1/pods/{{ $('Set Pod URL').item.json.podId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "RunPod API"
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [3600, 0],
+      "id": "aaaaaaaa-0000-4000-8000-000000000016",
+      "name": "Terminate Pod"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [{ "node": "Create Pod", "type": "main", "index": 0 }]
+      ]
+    },
+    "Create Pod": {
+      "main": [
+        [{ "node": "Wait for Pod", "type": "main", "index": 0 }]
+      ]
+    },
+    "Wait for Pod": {
+      "main": [
+        [{ "node": "Get Pod Status", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Pod Status": {
+      "main": [
+        [{ "node": "Is Pod Running?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Is Pod Running?": {
+      "main": [
+        [{ "node": "Set Pod URL", "type": "main", "index": 0 }],
+        [{ "node": "Wait for Pod", "type": "main", "index": 0 }]
+      ]
+    },
+    "Set Pod URL": {
+      "main": [
+        [{ "node": "Wait ComfyUI Startup", "type": "main", "index": 0 }]
+      ]
+    },
+    "Wait ComfyUI Startup": {
+      "main": [
+        [{ "node": "POST to ComfyUI", "type": "main", "index": 0 }]
+      ]
+    },
+    "POST to ComfyUI": {
+      "main": [
+        [{ "node": "Wait for Generation", "type": "main", "index": 0 }]
+      ]
+    },
+    "Wait for Generation": {
+      "main": [
+        [{ "node": "Poll ComfyUI History", "type": "main", "index": 0 }]
+      ]
+    },
+    "Poll ComfyUI History": {
+      "main": [
+        [{ "node": "Check Generation Done", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check Generation Done": {
+      "main": [
+        [{ "node": "Is Generation Done?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Is Generation Done?": {
+      "main": [
+        [{ "node": "Download Image", "type": "main", "index": 0 }],
+        [{ "node": "Wait for Generation", "type": "main", "index": 0 }]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [{ "node": "Wait Before Cleanup", "type": "main", "index": 0 }]
+      ]
+    },
+    "Wait Before Cleanup": {
+      "main": [
+        [{ "node": "Terminate Pod", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "meta": null,
+  "pinData": {}
+}

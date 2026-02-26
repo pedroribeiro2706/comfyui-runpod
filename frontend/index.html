@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tLotD — Asset Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d0d0d;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #c9a96e;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+      color: #555;
+      margin-bottom: 32px;
+      letter-spacing: 0.04em;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    textarea {
+      flex: 1;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-size: 0.95rem;
+      padding: 12px 14px;
+      resize: vertical;
+      min-height: 80px;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+
+    textarea:focus { border-color: #c9a96e; }
+    textarea::placeholder { color: #444; }
+
+    button {
+      background: #c9a96e;
+      color: #0d0d0d;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 0 20px;
+      cursor: pointer;
+      min-width: 100px;
+      letter-spacing: 0.04em;
+      transition: background 0.2s, opacity 0.2s;
+      align-self: flex-start;
+      height: 42px;
+    }
+
+    button:hover:not(:disabled) { background: #e0bf85; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .status {
+      font-size: 0.82rem;
+      color: #888;
+      min-height: 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid #333;
+      border-top-color: #c9a96e;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    .spinner.active { display: inline-block; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .image-area {
+      width: 100%;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 8px;
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .image-area img {
+      max-width: 100%;
+      max-height: 70vh;
+      object-fit: contain;
+      display: block;
+    }
+
+    .placeholder-text {
+      font-size: 0.8rem;
+      color: #333;
+      letter-spacing: 0.06em;
+    }
+
+    .error { color: #e06c6c; font-size: 0.82rem; }
+
+    .config {
+      margin-top: 24px;
+      font-size: 0.75rem;
+      color: #444;
+    }
+
+    .config span { color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>The Light of the Darkness</h1>
+    <p class="subtitle">Asset Generator — v0.1 MVP</p>
+
+    <div class="input-row">
+      <textarea
+        id="promptInput"
+        placeholder="Descreva o asset a ser gerado... (ex: a dark knight in full armor, cinematic lighting, concept art)"
+        rows="3"
+      ></textarea>
+      <button id="generateBtn" onclick="generate()">Gerar</button>
+    </div>
+
+    <div class="status">
+      <div class="spinner" id="spinner"></div>
+      <span id="statusText"></span>
+    </div>
+
+    <div class="image-area" id="imageArea">
+      <span class="placeholder-text">A imagem gerada aparecerá aqui</span>
+    </div>
+
+    <div class="config">
+      Webhook: <span id="webhookDisplay"></span>
+    </div>
+  </div>
+
+  <script>
+    // ---- CONFIGURAÇÃO ----
+    // URL base do n8n. Altere para o seu domínio se necessário.
+    const N8N_BASE = 'https://workflows-mvp.clockdesign.com.br';
+
+    // Usar /webhook para produção ou /webhook-test para testar no n8n
+    const WEBHOOK_PATH = '/webhook/tLotD';
+
+    const WEBHOOK_URL = N8N_BASE + WEBHOOK_PATH;
+    // ----------------------
+
+    document.getElementById('webhookDisplay').textContent = WEBHOOK_URL;
+
+    const statusMessages = [
+      { after: 0,   text: 'Criando pod no RunPod...' },
+      { after: 15,  text: 'Aguardando GPU ficar disponível...' },
+      { after: 60,  text: 'Pod iniciado. Carregando ComfyUI...' },
+      { after: 120, text: 'ComfyUI pronto. Gerando imagem...' },
+      { after: 150, text: 'Geração em andamento...' },
+    ];
+
+    let statusTimer = null;
+
+    function startStatusMessages() {
+      let idx = 0;
+      function next() {
+        if (idx < statusMessages.length) {
+          const msg = statusMessages[idx++];
+          statusTimer = setTimeout(() => {
+            setStatus(msg.text);
+            next();
+          }, msg.after * 1000);
+        }
+      }
+      next();
+    }
+
+    function stopStatusMessages() {
+      clearTimeout(statusTimer);
+    }
+
+    function setStatus(text, isError = false) {
+      const el = document.getElementById('statusText');
+      el.textContent = text;
+      el.className = isError ? 'error' : '';
+    }
+
+    function setLoading(loading) {
+      document.getElementById('spinner').classList.toggle('active', loading);
+      document.getElementById('generateBtn').disabled = loading;
+      document.getElementById('promptInput').disabled = loading;
+    }
+
+    async function generate() {
+      const prompt = document.getElementById('promptInput').value.trim();
+      if (!prompt) {
+        setStatus('Por favor, escreva um prompt antes de gerar.', true);
+        return;
+      }
+
+      setLoading(true);
+      stopStatusMessages();
+      startStatusMessages();
+
+      const imageArea = document.getElementById('imageArea');
+      imageArea.innerHTML = '<span class="placeholder-text">Gerando...</span>';
+
+      try {
+        const response = await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt }),
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`Erro ${response.status}: ${errText}`);
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = prompt;
+
+        imageArea.innerHTML = '';
+        imageArea.appendChild(img);
+
+        stopStatusMessages();
+        setStatus('Imagem gerada com sucesso.');
+      } catch (err) {
+        stopStatusMessages();
+        setStatus('Erro: ' + err.message, true);
+        imageArea.innerHTML = '<span class="placeholder-text">Falha na geração</span>';
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // Permitir Ctrl+Enter para gerar
+    document.getElementById('promptInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) generate();
+    });
+  </script>
+</body>
+</html>

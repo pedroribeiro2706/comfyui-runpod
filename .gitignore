@@ -1,0 +1,15 @@
+# API keys e configs locais com credenciais
+.mcp.json
+
+# Modelos de IA (arquivos grandes, ficam no volume RunPod)
+checkpoints/
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+
+# Ambiente local
+.env
+*.env
+node_modules/
+*.png

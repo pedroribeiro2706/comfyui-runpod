@@ -40,9 +40,22 @@
       letter-spacing: 0.04em;
     }
 
-    .input-row {
+    .field-group {
+      margin-bottom: 16px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 0.72rem;
+      color: #555;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .button-row {
       display: flex;
-      gap: 10px;
+      justify-content: flex-end;
       margin-bottom: 24px;
     }
 
@@ -76,7 +89,6 @@
       min-width: 100px;
       letter-spacing: 0.04em;
       transition: background 0.2s, opacity 0.2s;
-      align-self: flex-start;
       height: 42px;
     }
 
@@ -148,12 +160,24 @@
     <h1>The Light of the Darkness</h1>
     <p class="subtitle">Asset Generator — v0.1 MVP</p>
 
-    <div class="input-row">
+    <div class="field-group">
+      <label class="field-label" for="promptInput">Prompt</label>
       <textarea
         id="promptInput"
         placeholder="Descreva o asset a ser gerado... (ex: a dark knight in full armor, cinematic lighting, concept art)"
         rows="3"
       ></textarea>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="negativeInput">Prompt negativo</label>
+      <textarea
+        id="negativeInput"
+        rows="2"
+      >deformed, ugly, low quality, blurry, watermark, extra limbs, extra fingers, malformed hands, lowres, bad anatomy, missing limbs, floating limbs</textarea>
+    </div>
+
+    <div class="button-row">
       <button id="generateBtn" onclick="generate()">Gerar</button>
     </div>
 
@@ -222,6 +246,7 @@
       document.getElementById('spinner').classList.toggle('active', loading);
       document.getElementById('generateBtn').disabled = loading;
       document.getElementById('promptInput').disabled = loading;
+      document.getElementById('negativeInput').disabled = loading;
     }
 
     async function generate() {
@@ -242,7 +267,10 @@
         const response = await fetch(WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt }),
+          body: JSON.stringify({
+            prompt,
+            negative_prompt: document.getElementById('negativeInput').value.trim(),
+          }),
         });
 
         if (!response.ok) {

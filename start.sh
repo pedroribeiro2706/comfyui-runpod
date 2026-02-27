@@ -4,7 +4,7 @@ set -e
 BASE=/workspace
 COMFY=$BASE/ComfyUI
 
-mkdir -p $BASE/models $BASE/outputs $BASE/workflows
+mkdir -p $BASE/models/checkpoints $BASE/outputs $BASE/workflows
 
 if [ ! -d "$COMFY" ]; then
   git clone https://github.com/comfyanonymous/ComfyUI.git $COMFY

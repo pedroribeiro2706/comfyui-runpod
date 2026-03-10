@@ -26,7 +26,8 @@ interface Props {
 }
 
 export default function ArtifactEditor({ name, type, updatedAt, initialValue }: Props) {
-  const [value, setValue] = useState(initialValue);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const editorRef = useRef<any>(null);
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -34,9 +35,12 @@ export default function ArtifactEditor({ name, type, updatedAt, initialValue }: 
   const handleSave = useCallback(async () => {
     if (status === 'saving') return;
 
+    // Read directly from the editor instance — avoids stale React state
+    const content = editorRef.current?.getValue() ?? initialValue;
+
     if (type === 'json') {
       try {
-        JSON.parse(value);
+        JSON.parse(content);
       } catch {
         setStatus('error');
         setErrorMsg('JSON inválido — corrija os erros antes de salvar.');
@@ -48,7 +52,7 @@ export default function ArtifactEditor({ name, type, updatedAt, initialValue }: 
     setErrorMsg('');
 
     try {
-      await updateArtifact(name, value);
+      await updateArtifact(name, content);
       setStatus('saved');
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => setStatus('idle'), 3000);
@@ -56,7 +60,7 @@ export default function ArtifactEditor({ name, type, updatedAt, initialValue }: 
       setStatus('error');
       setErrorMsg(e instanceof Error ? e.message : 'Erro ao salvar');
     }
-  }, [name, type, value, status]);
+  }, [name, type, initialValue, status]);
 
   const label = ARTIFACT_LABELS[name] ?? name;
   const formattedDate = new Date(updatedAt).toLocaleString('pt-BR', {
@@ -130,9 +134,9 @@ export default function ArtifactEditor({ name, type, updatedAt, initialValue }: 
         <MonacoEditor
           height="100%"
           language={type === 'json' ? 'json' : 'markdown'}
-          value={value}
-          onChange={(v) => {
-            setValue(v ?? '');
+          defaultValue={initialValue}
+          onMount={(editor) => { editorRef.current = editor; }}
+          onChange={() => {
             if (status === 'saved' || status === 'error') setStatus('idle');
           }}
           theme="vs-dark"

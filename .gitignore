@@ -11,5 +11,7 @@ checkpoints/
 # Ambiente local
 .env
 *.env
+.env.local
+*.env.local
 node_modules/
 *.png

@@ -1,0 +1,788 @@
+{
+  "name": "tLotD",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tLotD",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -16
+      ],
+      "id": "aaaaaaaa-0000-4000-8000-000000000001",
+      "name": "Webhook",
+      "webhookId": "aaaaaaaa-0000-4000-8000-000000000001"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://rest.runpod.io/v1/pods",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"name\": \"tLotD-comfy\",\n  \"imageName\": \"ghcr.io/pedroribeiro2706/comfyui-runpod:latest\",\n  \"gpuTypeIds\": [\"NVIDIA GeForce RTX 4090\", \"NVIDIA GeForce RTX 4080\", \"NVIDIA RTX A6000\"],\n  \"cloudType\": \"SECURE\",\n  \"networkVolumeId\": \"f1yahlb3w9\",\n  \"ports\": [\"8188/http\"],\n  \"containerDiskInGb\": 20,\n  \"volumeMountPath\": \"/workspace\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        896,
+        -96
+      ],
+      "id": "aaaaaaaa-0000-4000-8000-000000000002",
+      "name": "Create Pod",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "7b4SaaJxpNHp14IG",
+          "name": "RunPod API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        -96
+      ],
+      "id": "aaaaaaaa-0000-4000-8000-000000000003",
+      "name": "Wait for Pod",
+      "webhookId": "73569e2c-65ce-4184-877d-f9e8dc4218c1"
+    },
+    {
+      "parameters": {
+        "url": "=https://rest.runpod.io/v1/pods/{{ $json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1344,
+        -160
+      ],
+      "id": "aaaaaaaa-0000-4000-8000-000000000004",
+      "name": "Get Pod Status",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "7b4SaaJxpNHp14IG",
+          "name": "RunPod API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-pod-running-01",
+              "leftValue": "={{ $json.desiredStatus }}",
+              "rightValue": "RUNNING",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        -96
+      ],
+      "id": "aaaaaaaa-0000-4000-8000-000000000005",
+      "name": "Is Pod Running?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "assign-baseurl",
+              "name": "baseUrl",
+              "value": "=https://{{ $json.id }}-8188.proxy.runpod.net",
+              "type": "string"
+            },
+            {
+              "id": "assign-podid",
+              "name": "podId",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1792,
+        -16
+      ],
+      "id": "aaaaaaaa-0000-4000-8000-000000000006",
+      "name": "Set Pod URL"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Set Pod URL').item.json.baseUrl }}/prompt",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.payload }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2912,
+        -16
+      ],
+      "id": "aaaaaaaa-0000-4000-8000-000000000008",
+      "name": "POST to ComfyUI"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3136,
+        -16
+      ],
+      "id": "aaaaaaaa-0000-4000-8000-000000000009",
+      "name": "Wait for Generation",
+      "webhookId": "accb75d7-7cab-4ffa-a123-ad8904e93c3f"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Set Pod URL').item.json.baseUrl }}/history/{{ $('POST to ComfyUI').item.json.prompt_id }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3360,
+        -96
+      ],
+      "id": "aaaaaaaa-0000-4000-8000-000000000010",
+      "name": "Poll ComfyUI History"
+    },
+    {
+      "parameters": {
+        "jsCode": "const history = $input.first().json;\nconst promptId = $('POST to ComfyUI').item.json.prompt_id;\n\nconst execution = history[promptId];\n\nif (!execution || !execution.outputs || Object.keys(execution.outputs).length === 0) {\n  return [{ json: { done: false } }];\n}\n\nconst saveNode = execution.outputs['7'];\n\nif (!saveNode || !saveNode.images || saveNode.images.length === 0) {\n  return [{ json: { done: false } }];\n}\n\nconst image = saveNode.images[0];\nreturn [{\n  json: {\n    done: true,\n    filename: image.filename,\n    subfolder: image.subfolder || '',\n    type: image.type || 'output'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3584,
+        -96
+      ],
+      "id": "aaaaaaaa-0000-4000-8000-000000000011",
+      "name": "Check Generation Done"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-gen-done-01",
+              "leftValue": "={{ $json.done }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3808,
+        -16
+      ],
+      "id": "aaaaaaaa-0000-4000-8000-000000000012",
+      "name": "Is Generation Done?"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Set Pod URL').item.json.baseUrl }}/view?filename={{ $json.filename }}&subfolder={{ $json.subfolder }}&type={{ $json.type }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4032,
+        -16
+      ],
+      "id": "aaaaaaaa-0000-4000-8000-000000000013",
+      "name": "Download Image"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "image/png"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        4256,
+        -16
+      ],
+      "id": "aaaaaaaa-0000-4000-8000-000000000014",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "amount": 300
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4480,
+        -16
+      ],
+      "id": "aaaaaaaa-0000-4000-8000-000000000015",
+      "name": "Wait Before Cleanup",
+      "webhookId": "2446b518-d7c7-417e-9cb4-497c74eeebc0"
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://rest.runpod.io/v1/pods/{{ $('Set Pod URL').item.json.podId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4704,
+        -16
+      ],
+      "id": "aaaaaaaa-0000-4000-8000-000000000016",
+      "name": "Terminate Pod",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "7b4SaaJxpNHp14IG",
+          "name": "RunPod API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "id": "748c6549-7b9f-4632-ac8e-791d7b45e968",
+      "name": "Wait Before ComfyUI Check",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2016,
+        -16
+      ],
+      "webhookId": "1034ebf4-95be-4a4d-a119-c109f179c15d"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Set Pod URL').item.json.baseUrl }}/system_stats",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "a5b0b6ba-ff8d-4d3b-b989-1aa62acdeb66",
+      "name": "Check ComfyUI Ready",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2240,
+        -96
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-comfy-ready-01",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "61f19613-33ae-461b-bcfb-83080e1cfab2",
+      "name": "Is ComfyUI Ready?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2464,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhook = $('Webhook').first().json;\nconst prompt = webhook.body.prompt || '';\nconst negativePrompt = webhook.body.negative_prompt || 'deformed, ugly, low quality, blurry, watermark, extra limbs, extra fingers, malformed hands, lowres, bad anatomy, missing limbs, floating limbs';\nconst seed = Math.floor(Math.random() * 9999999999);\n\nconst payload = {\n  prompt: {\n    '1': {\n      inputs: { ckpt_name: 'DreamShaperXL_Turbo_dpmppSdeKarras_half_pruned_6.safetensors' },\n      class_type: 'CheckpointLoaderSimple'\n    },\n    '2': {\n      inputs: {\n        text: 'masterpiece, best quality, highly detailed, concept art, ' + prompt,\n        clip: ['1', 1]\n      },\n      class_type: 'CLIPTextEncode'\n    },\n    '8': {\n      inputs: {\n        text: negativePrompt,\n        clip: ['1', 1]\n      },\n      class_type: 'CLIPTextEncode'\n    },\n    '4': {\n      inputs: { width: 1024, height: 1024, batch_size: 1 },\n      class_type: 'EmptyLatentImage'\n    },\n    '3': {\n      inputs: {\n        seed: seed,\n        steps: 28,\n        cfg: 6,\n        sampler_name: 'euler_ancestral',\n        scheduler: 'karras',\n        denoise: 1,\n        model: ['1', 0],\n        positive: ['2', 0],\n        negative: ['8', 0],\n        latent_image: ['4', 0]\n      },\n      class_type: 'KSampler'\n    },\n    '6': {\n      inputs: { samples: ['3', 0], vae: ['1', 2] },\n      class_type: 'VAEDecode'\n    },\n    '7': {\n      inputs: { filename_prefix: 'tLotD', images: ['6', 0] },\n      class_type: 'SaveImage'\n    }\n  }\n};\n\nreturn [{ json: { payload: JSON.stringify(payload), seed: seed } }];"
+      },
+      "id": "cccccccc-0000-4000-8000-000000000001",
+      "name": "Build ComfyUI Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2688,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://rest.runpod.io/v1/pods",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "dddddddd-0000-4000-8000-000000000001",
+      "name": "List Running Pods",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        224,
+        -16
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "7b4SaaJxpNHp14IG",
+          "name": "RunPod API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n splits array responses into individual items.\n// $input.all() returns all items - each one is a pod object.\nconst items = $input.all();\n\n// Case 1: n8n split the array - each item.json is a pod object\nconst activePod = items.find(item =>\n  item.json.name === 'tLotD-comfy' && item.json.desiredStatus === 'RUNNING'\n);\n\nif (activePod) {\n  return [{ json: { found: true, id: activePod.json.id } }];\n}\n\n// Case 2: response came wrapped as { data: [...] } in a single item\nfor (const item of items) {\n  if (item.json.data && Array.isArray(item.json.data)) {\n    const pod = item.json.data.find(p =>\n      p.name === 'tLotD-comfy' && p.desiredStatus === 'RUNNING'\n    );\n    if (pod) {\n      return [{ json: { found: true, id: pod.id } }];\n    }\n  }\n}\n\nreturn [{ json: { found: false, id: null } }];"
+      },
+      "id": "dddddddd-0000-4000-8000-000000000002",
+      "name": "Find Active Pod",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-pod-active-01",
+              "leftValue": "={{ $json.found }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "dddddddd-0000-4000-8000-000000000003",
+      "name": "Pod Already Running?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        -16
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Create Pod": {
+      "main": [
+        [
+          {
+            "node": "Wait for Pod",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Pod": {
+      "main": [
+        [
+          {
+            "node": "Get Pod Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Pod Status": {
+      "main": [
+        [
+          {
+            "node": "Is Pod Running?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Pod Running?": {
+      "main": [
+        [
+          {
+            "node": "Set Pod URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait for Pod",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST to ComfyUI": {
+      "main": [
+        [
+          {
+            "node": "Wait for Generation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Generation": {
+      "main": [
+        [
+          {
+            "node": "Poll ComfyUI History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll ComfyUI History": {
+      "main": [
+        [
+          {
+            "node": "Check Generation Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Generation Done": {
+      "main": [
+        [
+          {
+            "node": "Is Generation Done?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Generation Done?": {
+      "main": [
+        [
+          {
+            "node": "Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait for Generation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Wait Before Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Before Cleanup": {
+      "main": [
+        [
+          {
+            "node": "Terminate Pod",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Pod URL": {
+      "main": [
+        [
+          {
+            "node": "Wait Before ComfyUI Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Before ComfyUI Check": {
+      "main": [
+        [
+          {
+            "node": "Check ComfyUI Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check ComfyUI Ready": {
+      "main": [
+        [
+          {
+            "node": "Is ComfyUI Ready?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is ComfyUI Ready?": {
+      "main": [
+        [
+          {
+            "node": "Build ComfyUI Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait Before ComfyUI Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build ComfyUI Payload": {
+      "main": [
+        [
+          {
+            "node": "POST to ComfyUI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "List Running Pods",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Running Pods": {
+      "main": [
+        [
+          {
+            "node": "Find Active Pod",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Active Pod": {
+      "main": [
+        [
+          {
+            "node": "Pod Already Running?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pod Already Running?": {
+      "main": [
+        [
+          {
+            "node": "Set Pod URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Pod",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "saveManualExecutions": true
+  },
+  "versionId": "d9973bef-fe7d-4b4d-b179-e068a9091e0b",
+  "meta": {
+    "instanceId": "ee5b2503fa39f07769f098b1fcdcf81ce32789300648036f340e8c0c167ab279"
+  },
+  "id": "3wgEcu7GkDL1YhZU",
+  "tags": []
+}

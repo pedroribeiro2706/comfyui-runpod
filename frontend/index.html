@@ -33,11 +33,59 @@
       margin-bottom: 4px;
     }
 
+    /* ---- TABS ---- */
+    .tabs-bar {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 0;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      color: #555;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      cursor: pointer;
+      height: auto;
+      min-width: unset;
+      margin-bottom: -1px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .tab-btn:hover:not(:disabled) { background: none; color: #999; }
+    .tab-btn.active { color: #c9a96e; border-bottom-color: #c9a96e; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ---- SHARED FORM STYLES ---- */
     .subtitle {
       font-size: 0.8rem;
       color: #555;
       margin-bottom: 32px;
       letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge-ia {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #0d0d0d;
+      background: #c9a96e;
+      border-radius: 3px;
+      padding: 2px 7px;
     }
 
     .field-group {
@@ -47,7 +95,7 @@
     .field-label {
       display: block;
       font-size: 0.72rem;
-      color: #555;
+      color: #888;
       letter-spacing: 0.06em;
       text-transform: uppercase;
       margin-bottom: 6px;
@@ -55,13 +103,13 @@
 
     .button-row {
       display: flex;
-      justify-content: flex-end;
+      justify-content: center;
       margin-bottom: 24px;
     }
 
     textarea {
-      flex: 1;
-      background: #1a1a1a;
+      width: 100%;
+      background: #222;
       border: 1px solid #333;
       border-radius: 6px;
       color: #e0e0e0;
@@ -75,7 +123,21 @@
     }
 
     textarea:focus { border-color: #c9a96e; }
-    textarea::placeholder { color: #444; }
+    textarea::placeholder { color: #666; }
+
+    input[type="number"] {
+      background: #222;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-size: 0.9rem;
+      font-family: inherit;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="number"]:focus { border-color: #c9a96e; }
+    input::placeholder { color: #666; }
 
     button {
       background: #c9a96e;
@@ -139,12 +201,60 @@
     }
 
     .placeholder-text {
-      font-size: 0.8rem;
-      color: #333;
+      font-size: 1rem;
+      color: #666;
       letter-spacing: 0.06em;
     }
 
     .error { color: #e06c6c; font-size: 0.82rem; }
+
+    .meta-strip {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: #666;
+      display: none;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .meta-strip.visible { display: flex; }
+
+    .meta-dot { color: #333; }
+    .meta-label { color: #555; }
+    .meta-value { color: #999; }
+
+    .seed-btn {
+      background: none;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #777;
+      font-size: 0.75rem;
+      font-weight: 400;
+      padding: 1px 7px;
+      cursor: pointer;
+      letter-spacing: 0;
+      height: auto;
+      min-width: unset;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .seed-btn:hover { border-color: #c9a96e; color: #c9a96e; }
+
+    .enhanced-prompt-box {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      color: #666;
+      display: none;
+    }
+
+    .enhanced-prompt-box.visible { display: block; }
+    .enhanced-prompt-box .ep-label { color: #444; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+    .enhanced-prompt-box .ep-text { color: #888; line-height: 1.5; }
 
     .config {
       margin-top: 24px;
@@ -153,155 +263,529 @@
     }
 
     .config span { color: #666; }
+
+    /* ---- MODAL ---- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 28px 28px 24px;
+      max-width: 480px;
+      width: 100%;
+    }
+
+    .modal-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #c9a96e;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .modal-reason {
+      font-size: 0.88rem;
+      color: #ccc;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    .modal-suggestion {
+      font-size: 0.8rem;
+      color: #777;
+      background: #111;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .modal-suggestion strong { color: #888; }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .btn-cancel {
+      background: #222;
+      color: #888;
+      border: 1px solid #333;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0 16px;
+      height: 36px;
+      cursor: pointer;
+      min-width: unset;
+      transition: background 0.2s;
+    }
+
+    .btn-cancel:hover { background: #2a2a2a; color: #aaa; }
+
+    .btn-force {
+      background: #3a2a1a;
+      color: #c9a96e;
+      border: 1px solid #553d20;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0 16px;
+      height: 36px;
+      cursor: pointer;
+      min-width: unset;
+      transition: background 0.2s;
+    }
+
+    .btn-force:hover { background: #4a3520; }
+
+    .modal.modal-warning { border-color: #4a3e10; }
+    .modal.modal-warning .modal-title { color: #e8c840; }
   </style>
 </head>
 <body>
+
+  <!-- Modal de validação de lore (Fase 02) -->
+  <div class="modal-overlay" id="validationModal">
+    <div class="modal">
+      <div class="modal-title">Prompt fora do universo tLotD</div>
+      <div class="modal-reason" id="modalReason"></div>
+      <div class="modal-suggestion">
+        <strong>Sugestão:</strong> <span id="modalSuggestion"></span>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="btn-force" onclick="generateForce()">Gerar mesmo assim</button>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
     <h1>The Light of the Darkness</h1>
-    <p class="subtitle">Asset Generator — v0.1 MVP</p>
 
-    <div class="field-group">
-      <label class="field-label" for="promptInput">Prompt</label>
-      <textarea
-        id="promptInput"
-        placeholder="Descreva o asset a ser gerado... (ex: a dark knight in full armor, cinematic lighting, concept art)"
-        rows="3"
-      ></textarea>
+    <div class="tabs-bar">
+      <button class="tab-btn active" data-tab="1" onclick="switchTab(1)">Fase 01</button>
+      <button class="tab-btn" data-tab="2" onclick="switchTab(2)">Fase 02 — IA</button>
     </div>
 
-    <div class="field-group">
-      <label class="field-label" for="negativeInput">Prompt negativo</label>
-      <textarea
-        id="negativeInput"
-        rows="2"
-      >deformed, ugly, low quality, blurry, watermark, extra limbs, extra fingers, malformed hands, lowres, bad anatomy, missing limbs, floating limbs</textarea>
+    <!-- ===================== FASE 01 ===================== -->
+    <div id="tab-1" class="tab-panel active">
+      <p class="subtitle">Asset Generator — v2.2</p>
+
+      <div class="field-group">
+        <label class="field-label" for="p1promptInput">Prompt</label>
+        <textarea
+          id="p1promptInput"
+          placeholder="Descreva o asset a ser gerado... (ex: a dark knight in full armor, cinematic lighting, concept art)"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="p1negativeInput">Prompt negativo</label>
+        <textarea id="p1negativeInput" rows="2">deformed, ugly, low quality, blurry, watermark, extra limbs, extra fingers, malformed hands, lowres, bad anatomy, missing limbs, floating limbs</textarea>
+      </div>
+
+      <div class="button-row">
+        <button id="p1generateBtn" onclick="p1generate()">Gerar</button>
+      </div>
+
+      <div class="status">
+        <div class="spinner" id="p1spinner"></div>
+        <span id="p1statusText"></span>
+      </div>
+
+      <div class="image-area" id="p1imageArea">
+        <span class="placeholder-text">A imagem gerada aparecerá aqui</span>
+      </div>
+
+      <div class="meta-strip" id="p1metaStrip">
+        <span class="meta-label">Montagem</span>
+        <span class="meta-value" id="p1metaSetup"></span>
+        <span class="meta-dot">·</span>
+        <span class="meta-label">Geração</span>
+        <span class="meta-value" id="p1metaGen"></span>
+        <span class="meta-dot">·</span>
+        <span class="meta-label">Total</span>
+        <span class="meta-value" id="p1metaTotal"></span>
+        <span class="meta-dot">·</span>
+        <span class="meta-value" id="p1metaCost"></span>
+        <span class="meta-dot">·</span>
+        <button class="seed-btn" id="p1metaSeed" title="Clique para copiar o seed"></button>
+      </div>
+
+      <div class="config">
+        Webhook: <span id="p1webhookDisplay"></span>
+        &nbsp;&nbsp;·&nbsp;&nbsp;
+        Cotação R$/USD: <input id="p1brlRateInput" type="number" step="0.01" min="0" placeholder="ex: 5.90"
+          style="background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#888;font-size:0.75rem;padding:2px 6px;width:80px;outline:none;">
+      </div>
     </div>
 
-    <div class="button-row">
-      <button id="generateBtn" onclick="generate()">Gerar</button>
-    </div>
+    <!-- ===================== FASE 02 ===================== -->
+    <div id="tab-2" class="tab-panel">
+      <p class="subtitle">
+        Asset Generator — v2.3
+        <span class="badge-ia">IA Ativa</span>
+      </p>
 
-    <div class="status">
-      <div class="spinner" id="spinner"></div>
-      <span id="statusText"></span>
-    </div>
+      <div class="field-group">
+        <label class="field-label" for="p2promptInput">Prompt</label>
+        <textarea
+          id="p2promptInput"
+          placeholder="Descreva o asset... O prompt será validado e enriquecido automaticamente pela IA."
+          rows="3"
+        ></textarea>
+      </div>
 
-    <div class="image-area" id="imageArea">
-      <span class="placeholder-text">A imagem gerada aparecerá aqui</span>
-    </div>
+      <div class="field-group">
+        <label class="field-label" for="p2negativeInput">Prompt negativo</label>
+        <textarea id="p2negativeInput" rows="2">deformed, ugly, low quality, blurry, watermark, extra limbs, extra fingers, malformed hands, lowres, bad anatomy, missing limbs, floating limbs</textarea>
+      </div>
 
-    <div class="config">
-      Webhook: <span id="webhookDisplay"></span>
+      <div class="field-group">
+        <label class="field-label" for="p2seedInput">Seed <span style="color:#444;font-size:0.65rem;">(deixe em branco para aleatório)</span></label>
+        <input id="p2seedInput" type="number" placeholder="ex: 4231567890" style="width:200px;" min="0" max="9999999999" />
+      </div>
+
+      <div class="button-row">
+        <button id="p2generateBtn" onclick="p2generate()">Gerar</button>
+      </div>
+
+      <div class="status">
+        <div class="spinner" id="p2spinner"></div>
+        <span id="p2statusText"></span>
+      </div>
+
+      <div class="image-area" id="p2imageArea">
+        <span class="placeholder-text">A imagem gerada aparecerá aqui</span>
+      </div>
+
+      <div class="meta-strip" id="p2metaStrip">
+        <span class="meta-label">Montagem</span>
+        <span class="meta-value" id="p2metaSetup"></span>
+        <span class="meta-dot">·</span>
+        <span class="meta-label">Geração</span>
+        <span class="meta-value" id="p2metaGen"></span>
+        <span class="meta-dot">·</span>
+        <span class="meta-label">Total</span>
+        <span class="meta-value" id="p2metaTotal"></span>
+        <span class="meta-dot">·</span>
+        <span class="meta-value" id="p2metaCost"></span>
+        <span class="meta-dot">·</span>
+        <button class="seed-btn" id="p2metaSeed" title="Clique para copiar o seed"></button>
+      </div>
+
+      <div class="enhanced-prompt-box" id="enhancedPromptBox">
+        <div class="ep-label">Prompt melhorado pela IA</div>
+        <div class="ep-text" id="enhancedPromptText"></div>
+      </div>
+
+      <div class="config">
+        Webhook: <span id="p2webhookDisplay"></span>
+        &nbsp;&nbsp;·&nbsp;&nbsp;
+        Cotação R$/USD: <input id="p2brlRateInput" type="number" step="0.01" min="0" placeholder="ex: 5.90"
+          style="background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#888;font-size:0.75rem;padding:2px 6px;width:80px;outline:none;">
+      </div>
     </div>
   </div>
 
   <script>
     // ---- CONFIGURAÇÃO ----
-    // URL base do n8n. Altere para o seu domínio se necessário.
-    const N8N_BASE = 'https://workflows-mvp.clockdesign.com.br';
-
-    // Usar /webhook para produção ou /webhook-test para testar no n8n
-    const WEBHOOK_PATH = '/webhook/tLotD';
-
-    const WEBHOOK_URL = N8N_BASE + WEBHOOK_PATH;
+    const N8N_BASE   = 'https://workflows-mvp.clockdesign.com.br';
+    const WEBHOOK_P1 = N8N_BASE + '/webhook/tLotD';
+    const WEBHOOK_P2 = N8N_BASE + '/webhook/tLotD-02';
     // ----------------------
 
-    document.getElementById('webhookDisplay').textContent = WEBHOOK_URL;
+    // ---- TAB SWITCHING ----
+    function switchTab(n) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + n).classList.add('active');
+      document.querySelector('[data-tab="' + n + '"]').classList.add('active');
+    }
 
-    const statusMessages = [
+    // ---- SHARED HELPERS ----
+    function formatTime(s) {
+      if (s >= 60) {
+        const m = Math.floor(s / 60), r = s % 60;
+        return r > 0 ? `${m}m ${r}s` : `${m}m`;
+      }
+      return `${s}s`;
+    }
+
+    function showMeta(prefix, total, gen, costUsd, costBrl, seed) {
+      const setup = Math.max(0, total - gen);
+      document.getElementById(prefix + 'metaSetup').textContent = formatTime(setup);
+      document.getElementById(prefix + 'metaGen').textContent   = formatTime(gen);
+      document.getElementById(prefix + 'metaTotal').textContent = formatTime(total);
+      document.getElementById(prefix + 'metaCost').textContent  =
+        costUsd > 0 ? `$${costUsd} / R$ ${costBrl.toString().replace('.', ',')}` : '';
+      const seedBtn = document.getElementById(prefix + 'metaSeed');
+      seedBtn.textContent = `seed ${seed}`;
+      seedBtn.onclick = () => {
+        navigator.clipboard.writeText(seed).then(() => {
+          seedBtn.textContent = 'copiado!';
+          setTimeout(() => { seedBtn.textContent = `seed ${seed}`; }, 1500);
+        });
+      };
+      document.getElementById(prefix + 'metaStrip').classList.add('visible');
+    }
+
+    function readMeta(response) {
+      const totalTime = parseInt(response.headers.get('X-Total-Time') || '0');
+      const genTime   = parseInt(response.headers.get('X-Generation-Time') || '0');
+      const seed      = response.headers.get('X-Seed') || '';
+      const costUsd   = parseFloat(response.headers.get('X-Cost-Usd') || '0');
+      const brlRate   = parseFloat(localStorage.getItem('brlRate') || '0');
+      const costBrl   = brlRate > 0 ? costUsd * brlRate : 0;
+      return { totalTime, genTime, seed, costUsd, costBrl };
+    }
+
+    function makeStatusRunner(msgs) {
+      let timer = null;
+      return {
+        start(setFn) {
+          let idx = 0;
+          function next() {
+            if (idx < msgs.length) {
+              const msg = msgs[idx++];
+              timer = setTimeout(() => { setFn(msg.text); next(); }, msg.after * 1000);
+            }
+          }
+          next();
+        },
+        stop() { clearTimeout(timer); }
+      };
+    }
+
+    const p1status = makeStatusRunner([
       { after: 0,   text: 'Criando pod no RunPod...' },
       { after: 15,  text: 'Aguardando GPU ficar disponível...' },
       { after: 60,  text: 'Pod iniciado. Carregando ComfyUI...' },
       { after: 120, text: 'ComfyUI pronto. Gerando imagem...' },
       { after: 150, text: 'Geração em andamento...' },
-    ];
+    ]);
 
-    let statusTimer = null;
+    const p2status = makeStatusRunner([
+      { after: 0,   text: 'Validando prompt com IA...' },
+      { after: 8,   text: 'Criando pod no RunPod...' },
+      { after: 20,  text: 'Aguardando GPU ficar disponível...' },
+      { after: 65,  text: 'Pod iniciado. Carregando ComfyUI...' },
+      { after: 125, text: 'ComfyUI pronto. Gerando imagem...' },
+      { after: 155, text: 'Geração em andamento...' },
+    ]);
 
-    function startStatusMessages() {
-      let idx = 0;
-      function next() {
-        if (idx < statusMessages.length) {
-          const msg = statusMessages[idx++];
-          statusTimer = setTimeout(() => {
-            setStatus(msg.text);
-            next();
-          }, msg.after * 1000);
-        }
-      }
-      next();
-    }
+    // ======================== FASE 01 ========================
+    document.getElementById('p1webhookDisplay').textContent = WEBHOOK_P1;
 
-    function stopStatusMessages() {
-      clearTimeout(statusTimer);
-    }
+    const p1brl = document.getElementById('p1brlRateInput');
+    p1brl.value = localStorage.getItem('brlRate') || '';
+    p1brl.addEventListener('change', () => {
+      const v = p1brl.value.trim();
+      if (v) localStorage.setItem('brlRate', v);
+      else localStorage.removeItem('brlRate');
+    });
 
-    function setStatus(text, isError = false) {
-      const el = document.getElementById('statusText');
+    function p1setStatus(text, isError = false) {
+      const el = document.getElementById('p1statusText');
       el.textContent = text;
       el.className = isError ? 'error' : '';
     }
 
-    function setLoading(loading) {
-      document.getElementById('spinner').classList.toggle('active', loading);
-      document.getElementById('generateBtn').disabled = loading;
-      document.getElementById('promptInput').disabled = loading;
-      document.getElementById('negativeInput').disabled = loading;
+    function p1setLoading(loading) {
+      document.getElementById('p1spinner').classList.toggle('active', loading);
+      document.getElementById('p1generateBtn').disabled = loading;
+      document.getElementById('p1promptInput').disabled = loading;
+      document.getElementById('p1negativeInput').disabled = loading;
     }
 
-    async function generate() {
-      const prompt = document.getElementById('promptInput').value.trim();
-      if (!prompt) {
-        setStatus('Por favor, escreva um prompt antes de gerar.', true);
-        return;
-      }
+    async function p1generate() {
+      const prompt = document.getElementById('p1promptInput').value.trim();
+      if (!prompt) { p1setStatus('Por favor, escreva um prompt antes de gerar.', true); return; }
 
-      setLoading(true);
-      stopStatusMessages();
-      startStatusMessages();
+      p1setLoading(true);
+      p1status.stop();
+      p1status.start(p1setStatus);
 
-      const imageArea = document.getElementById('imageArea');
+      const imageArea = document.getElementById('p1imageArea');
       imageArea.innerHTML = '<span class="placeholder-text">Gerando...</span>';
 
       try {
-        const response = await fetch(WEBHOOK_URL, {
+        const response = await fetch(WEBHOOK_P1, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt,
-            negative_prompt: document.getElementById('negativeInput').value.trim(),
+            negative_prompt: document.getElementById('p1negativeInput').value.trim(),
           }),
         });
 
-        if (!response.ok) {
-          const errText = await response.text();
-          throw new Error(`Erro ${response.status}: ${errText}`);
-        }
+        if (!response.ok) throw new Error(`Erro ${response.status}: ${await response.text()}`);
 
+        const { totalTime, genTime, seed, costUsd, costBrl } = readMeta(response);
         const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-
         const img = document.createElement('img');
-        img.src = url;
+        img.src = URL.createObjectURL(blob);
         img.alt = prompt;
-
         imageArea.innerHTML = '';
         imageArea.appendChild(img);
 
-        stopStatusMessages();
-        setStatus('Imagem gerada com sucesso.');
+        showMeta('p1', totalTime, genTime, costUsd, costBrl, seed);
+        p1status.stop();
+        p1setStatus('Imagem gerada com sucesso.');
       } catch (err) {
-        stopStatusMessages();
-        setStatus('Erro: ' + err.message, true);
+        p1status.stop();
+        p1setStatus('Erro: ' + err.message, true);
         imageArea.innerHTML = '<span class="placeholder-text">Falha na geração</span>';
       } finally {
-        setLoading(false);
+        p1setLoading(false);
       }
     }
 
-    // Permitir Ctrl+Enter para gerar
-    document.getElementById('promptInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) generate();
+    document.getElementById('p1promptInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) p1generate();
+    });
+
+    // ======================== FASE 02 ========================
+    document.getElementById('p2webhookDisplay').textContent = WEBHOOK_P2;
+
+    const p2brl = document.getElementById('p2brlRateInput');
+    p2brl.value = localStorage.getItem('brlRate') || '';
+    p2brl.addEventListener('change', () => {
+      const v = p2brl.value.trim();
+      if (v) localStorage.setItem('brlRate', v);
+      else localStorage.removeItem('brlRate');
+    });
+
+    function p2setStatus(text, isError = false) {
+      const el = document.getElementById('p2statusText');
+      el.textContent = text;
+      el.className = isError ? 'error' : '';
+    }
+
+    function p2setLoading(loading) {
+      document.getElementById('p2spinner').classList.toggle('active', loading);
+      document.getElementById('p2generateBtn').disabled = loading;
+      document.getElementById('p2promptInput').disabled = loading;
+      document.getElementById('p2negativeInput').disabled = loading;
+    }
+
+    let pendingForcePayload = null;
+
+    function closeModal() {
+      document.getElementById('validationModal').classList.remove('active');
+      pendingForcePayload = null;
+      p2setLoading(false);
+      p2status.stop();
+    }
+
+    async function generateForce() {
+      document.getElementById('validationModal').classList.remove('active');
+      if (!pendingForcePayload) return;
+      await p2send({ ...pendingForcePayload, force: true });
+    }
+
+    async function p2generate() {
+      const prompt = document.getElementById('p2promptInput').value.trim();
+      if (!prompt) { p2setStatus('Por favor, escreva um prompt antes de gerar.', true); return; }
+
+      const seedVal = document.getElementById('p2seedInput').value.trim();
+      const payload = {
+        prompt,
+        negative_prompt: document.getElementById('p2negativeInput').value.trim(),
+      };
+      if (seedVal !== '') payload.seed = parseInt(seedVal);
+
+      await p2send(payload);
+    }
+
+    async function p2send(payload) {
+      p2setLoading(true);
+      p2status.stop();
+      p2status.start(p2setStatus);
+
+      const imageArea = document.getElementById('p2imageArea');
+      imageArea.innerHTML = '<span class="placeholder-text">Gerando...</span>';
+      document.getElementById('enhancedPromptBox').classList.remove('visible');
+
+      try {
+        const response = await fetch(WEBHOOK_P2, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+
+        // Lore validation rejection (422 + JSON)
+        if (!response.ok && contentType.includes('application/json')) {
+          const data = await response.json();
+          if (data.validated === false) {
+            pendingForcePayload = payload;
+            const isReview = data.status === 'needs_review';
+            const modal = document.querySelector('#validationModal .modal');
+            modal.classList.toggle('modal-warning', isReview);
+            document.querySelector('#validationModal .modal-title').textContent =
+              isReview ? 'Prompt ambíguo — verificação recomendada' : 'Prompt fora do universo tLotD';
+            document.getElementById('modalReason').textContent = data.reason || 'Prompt incoerente com o universo tLotD.';
+            document.getElementById('modalSuggestion').textContent = data.suggestion || '';
+            document.getElementById('validationModal').classList.add('active');
+            p2status.stop();
+            p2setStatus(isReview ? 'Prompt ambíguo — verifique antes de gerar.' : 'Prompt rejeitado pelo validador de lore.', true);
+            imageArea.innerHTML = '<span class="placeholder-text">A imagem gerada aparecerá aqui</span>';
+            return;
+          }
+          throw new Error(`Erro ${response.status}: ${JSON.stringify(data)}`);
+        }
+
+        if (!response.ok) throw new Error(`Erro ${response.status}: ${await response.text()}`);
+
+        const { totalTime, genTime, seed, costUsd, costBrl } = readMeta(response);
+        const enhancedPrompt = response.headers.get('X-Enhanced-Prompt') || '';
+
+        const blob = await response.blob();
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(blob);
+        img.alt = payload.prompt;
+        imageArea.innerHTML = '';
+        imageArea.appendChild(img);
+
+        showMeta('p2', totalTime, genTime, costUsd, costBrl, seed);
+
+        if (enhancedPrompt) {
+          document.getElementById('enhancedPromptText').textContent = enhancedPrompt;
+          document.getElementById('enhancedPromptBox').classList.add('visible');
+        }
+
+        p2status.stop();
+        p2setStatus('Imagem gerada com sucesso.');
+      } catch (err) {
+        p2status.stop();
+        p2setStatus('Erro: ' + err.message, true);
+        imageArea.innerHTML = '<span class="placeholder-text">Falha na geração</span>';
+      } finally {
+        p2setLoading(false);
+        pendingForcePayload = null;
+      }
+    }
+
+    document.getElementById('p2promptInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) p2generate();
     });
   </script>
 </body>

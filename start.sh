@@ -10,6 +10,7 @@ if [ ! -d "$COMFY" ]; then
   git clone https://github.com/comfyanonymous/ComfyUI.git $COMFY
 fi
 
+rm -rf $COMFY/models $COMFY/output $COMFY/workflows
 ln -sf $BASE/models    $COMFY/models
 ln -sf $BASE/outputs   $COMFY/output
 ln -sf $BASE/workflows $COMFY/workflows

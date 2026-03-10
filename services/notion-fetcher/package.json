@@ -1,0 +1,9 @@
+{
+  "name": "notion-fetcher",
+  "version": "1.0.0",
+  "description": "Recursive Notion block fetcher for tLotD lore ingestion",
+  "main": "index.js",
+  "engines": {
+    "node": ">=22"
+  }
+}

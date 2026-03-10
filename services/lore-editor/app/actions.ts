@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import pool from '@/lib/db';
 
 export type ArtifactRow = {
@@ -49,4 +50,6 @@ export async function updateArtifact(name: string, content: string): Promise<voi
       [name, content],
     );
   }
+
+  revalidatePath(`/artifact/${name}`);
 }

@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { getArtifacts } from './actions';
 
+export const dynamic = 'force-dynamic';
+
 const ARTIFACT_LABELS: Record<string, string> = {
   lore_overview:       'Lore Overview',
   canon_rules:         'Canon Rules',

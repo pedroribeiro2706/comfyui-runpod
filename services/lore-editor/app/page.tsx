@@ -23,7 +23,8 @@ export default async function HomePage() {
   let artifacts;
   try {
     artifacts = await getArtifacts();
-  } catch {
+  } catch (e) {
+    console.error('[lore-editor] getArtifacts error:', e);
     return (
       <div className="text-center py-20">
         <p className="text-sm text-red-400">Erro ao conectar ao Postgres. Verifique a variável DATABASE_URL.</p>

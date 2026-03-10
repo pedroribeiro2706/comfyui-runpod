@@ -6,7 +6,6 @@ services:
     networks:
       - network_swarm_public
     environment:
-      - DATABASE_URL=postgresql://postgres:CHANGE_ME@postgres:5432/postgres
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
     deploy:

@@ -355,6 +355,8 @@
 
     .modal.modal-warning { border-color: #4a3e10; }
     .modal.modal-warning .modal-title { color: #e8c840; }
+    .modal.modal-approved { border-color: #1a3a1a; }
+    .modal.modal-approved .modal-title { color: #6dbf6d; }
   </style>
 </head>
 <body>
@@ -369,7 +371,7 @@
       </div>
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-        <button class="btn-force" onclick="generateForce()">Gerar mesmo assim</button>
+        <button class="btn-force" id="modalForceBtn" onclick="generateForce()">Gerar mesmo assim</button>
       </div>
     </div>
   </div>
@@ -732,25 +734,36 @@
 
         const contentType = response.headers.get('content-type') || '';
 
-        // Lore validation rejection (422 + JSON)
-        if (!response.ok && contentType.includes('application/json')) {
+        // Lore validation result (approved → 200+JSON, rejected/needs_review → 422+JSON)
+        if (contentType.includes('application/json')) {
           const data = await response.json();
-          if (data.validated === false) {
+          if (data.validated !== undefined) {
             pendingForcePayload = payload;
+            const isApproved = data.status === 'approved';
             const isReview = data.status === 'needs_review';
             const modal = document.querySelector('#validationModal .modal');
-            modal.classList.toggle('modal-warning', isReview);
+            modal.classList.remove('modal-warning', 'modal-approved');
+            if (isReview) modal.classList.add('modal-warning');
+            if (isApproved) modal.classList.add('modal-approved');
             document.querySelector('#validationModal .modal-title').textContent =
-              isReview ? 'Prompt ambíguo — verificação recomendada' : 'Prompt fora do universo tLotD';
-            document.getElementById('modalReason').textContent = data.reason || 'Prompt incoerente com o universo tLotD.';
+              isApproved ? 'Prompt aprovado' :
+              isReview   ? 'Prompt ambíguo — verificação recomendada' :
+                           'Prompt fora do universo tLotD';
+            document.getElementById('modalReason').textContent = data.reason || '';
             document.getElementById('modalSuggestion').textContent = data.suggestion || '';
+            document.getElementById('modalForceBtn').textContent = isApproved ? 'Gerar' : 'Gerar mesmo assim';
             document.getElementById('validationModal').classList.add('active');
             p2status.stop();
-            p2setStatus(isReview ? 'Prompt ambíguo — verifique antes de gerar.' : 'Prompt rejeitado pelo validador de lore.', true);
+            p2setStatus(
+              isApproved ? 'Prompt aprovado — confirme para gerar.' :
+              isReview   ? 'Prompt ambíguo — verifique antes de gerar.' :
+                           'Prompt rejeitado pelo validador de lore.',
+              !isApproved
+            );
             imageArea.innerHTML = '<span class="placeholder-text">A imagem gerada aparecerá aqui</span>';
             return;
           }
-          throw new Error(`Erro ${response.status}: ${JSON.stringify(data)}`);
+          if (!response.ok) throw new Error(`Erro ${response.status}: ${JSON.stringify(data)}`);
         }
 
         if (!response.ok) throw new Error(`Erro ${response.status}: ${await response.text()}`);
@@ -780,7 +793,6 @@
         imageArea.innerHTML = '<span class="placeholder-text">Falha na geração</span>';
       } finally {
         p2setLoading(false);
-        pendingForcePayload = null;
       }
     }
 

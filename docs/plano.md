@@ -1,6 +1,6 @@
 # tLotD — Plano de Arquitetura
 
-**Última revisão:** 2026-03-10
+**Última revisão:** 2026-03-11
 
 ---
 
@@ -11,7 +11,7 @@
 | Workflow | ID | Nós | Status | Função |
 |---|---|---|---|---|
 | `tLotD` | `3wgEcu7GkDL1YhZU` | 23 | ATIVO | Pipeline base (Fase 01) |
-| `tLotD-02` | `G5ekS4TSs1HaT3Ed` | 35 | ATIVO | Validador de lore + geração (Fase 02) |
+| `tLotD-02` | `G5ekS4TSs1HaT3Ed` | 37 | ATIVO | Validador de lore + geração (Fase 02) |
 | `tLotD-Lore` | `p0P08ym4kFt7nyJi` | 10 | ESTÁVEL | Ingestão Notion → Postgres |
 | `tLotD-DB-Migration` | — | — | Executado | Criação do schema Postgres |
 
@@ -48,12 +48,13 @@ Os artefatos canônicos são a **fonte de verdade atual** para o validador. O Lo
 - Deploy no Swarm com Traefik + TLS
 - URL pública: `lore-editor.clockdesign.com.br`
 
-### 🔧 v2.6 — Testes end-to-end do validador (próximo)
-- [ ] Testar 3 cenários com tLotD-02:
-  - Prompt inválido → modal vermelho (rejected)
-  - Prompt válido → imagem gerada
-  - Prompt ambíguo → modal amarelo (needs_review) → "Gerar mesmo assim"
-- [ ] Ajustar system prompts se necessário após testes reais
+### ✅ v2.6 — Validator end-to-end (concluído)
+- Validador aprovando prompts tLotD e rejeitando prompts fora do universo
+
+### ✅ v2.7 — Modal de confirmação + pipeline completo (concluído)
+- Prompt aprovado → modal verde → usuário confirma → geração com force:true
+- Prompt rejeitado/ambíguo → modal vermelho/amarelo → usuário decide → force:true ou cancela
+- Pipeline completo: validate → modal → confirm → enhance → pod → ComfyUI → imagem → frontend
 
 ### 🔲 v3.0 — Lore Graph (próximo planejamento)
 
@@ -192,5 +193,5 @@ CREATE TABLE lore_character_events (
 | Problema | Impacto | Status |
 |---|---|---|
 | Imagem GHCR 8.3GB — pull 5-8 min | ALTO | Mitigado por pod reuse |
-| tLotD-02 não testado end-to-end | MÉDIO | Pendente — v2.6 |
+| Fase 01 com erro 500 (causa não investigada) | MÉDIO | Pendente |
 | Frontend sem autenticação | BAIXO | Futuro |

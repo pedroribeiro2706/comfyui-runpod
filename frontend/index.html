@@ -9,7 +9,11 @@
 
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #0d0d0d;
+      background-color: #0d0d0d;
+      background-image: linear-gradient(rgba(13,13,13,0.82), rgba(13,13,13,0.82)), url('images/bg.jpg');
+      background-size: cover;
+      background-attachment: fixed;
+      background-position: center top;
       color: #e0e0e0;
       min-height: 100vh;
       display: flex;
@@ -357,6 +361,65 @@
     .modal.modal-warning .modal-title { color: #e8c840; }
     .modal.modal-approved { border-color: #1a3a1a; }
     .modal.modal-approved .modal-title { color: #6dbf6d; }
+
+    /* ---- FASE 03: Upload e Toggle ---- */
+    .upload-area {
+      width: 100%;
+      border: 1px dashed #333;
+      border-radius: 8px;
+      background: #111;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .upload-area:hover { border-color: #555; }
+    .upload-area input[type="file"] { display: none; }
+    .upload-label {
+      color: #555;
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+    }
+    .upload-preview {
+      max-width: 100%;
+      max-height: 200px;
+      object-fit: contain;
+      border-radius: 4px;
+      margin-top: 8px;
+      display: none;
+    }
+    .upload-preview.visible { display: block; margin: 8px auto 0; }
+
+    .mode-toggle {
+      display: flex;
+      gap: 0;
+      border: 1px solid #333;
+      border-radius: 6px;
+      overflow: hidden;
+      width: fit-content;
+      margin-bottom: 20px;
+    }
+    .mode-toggle button {
+      background: transparent;
+      border: none;
+      color: #555;
+      font-size: 0.8rem;
+      padding: 6px 20px;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: background 0.15s, color 0.15s;
+      border-radius: 0;
+      font-weight: 400;
+      height: auto;
+      min-width: unset;
+    }
+    .mode-toggle button.active {
+      background: #c9a96e;
+      color: #0d0d0d;
+      font-weight: 600;
+    }
+    .mode-toggle button:hover:not(.active) { background: transparent; color: #c9a96e; }
   </style>
 </head>
 <body>
@@ -380,12 +443,13 @@
     <h1>The Light of the Darkness</h1>
 
     <div class="tabs-bar">
-      <button class="tab-btn active" data-tab="1" onclick="switchTab(1)">Fase 01</button>
-      <button class="tab-btn" data-tab="2" onclick="switchTab(2)">Fase 02 — IA</button>
+      <button class="tab-btn active" data-tab="3" onclick="switchTab(3)">Fase 03</button>
+      <button class="tab-btn" data-tab="2" onclick="switchTab(2)">Fase 02</button>
+      <button class="tab-btn" data-tab="1" onclick="switchTab(1)">Fase 01</button>
     </div>
 
     <!-- ===================== FASE 01 ===================== -->
-    <div id="tab-1" class="tab-panel active">
+    <div id="tab-1" class="tab-panel">
       <p class="subtitle">Asset Generator — v2.2</p>
 
       <div class="field-group">
@@ -504,6 +568,91 @@
           style="background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#888;font-size:0.75rem;padding:2px 6px;width:80px;outline:none;">
       </div>
     </div>
+
+    <!-- ===================== FASE 03 ===================== -->
+    <div id="tab-3" class="tab-panel active">
+      <p class="subtitle">
+        Asset Generator — v3.0
+        <span class="badge-ia">IA Ativa</span>
+      </p>
+
+      <!-- TOGGLE IMAGEM / VÍDEO -->
+      <div class="mode-toggle">
+        <button id="p3modeImage" class="active" onclick="p3setMode('image')">Imagem</button>
+        <button id="p3modeVideo" onclick="p3setMode('video')">Vídeo</button>
+      </div>
+
+      <!-- UPLOAD DE IMAGEM DE REFERÊNCIA -->
+      <div class="field-group">
+        <label class="field-label">Imagem de referência</label>
+        <div class="upload-area" onclick="document.getElementById('p3imageUpload').click()">
+          <input type="file" id="p3imageUpload" accept="image/*" onchange="p3handleImageUpload(event)">
+          <span class="upload-label" id="p3uploadLabel">Clique para selecionar uma imagem (PNG, JPG, WEBP)</span>
+          <img id="p3uploadPreview" class="upload-preview" alt="Preview">
+        </div>
+      </div>
+
+      <!-- PROMPT -->
+      <div class="field-group">
+        <label class="field-label" for="p3promptInput">Prompt</label>
+        <textarea id="p3promptInput"
+          placeholder="Descreva o asset a ser gerado... O prompt será validado e enriquecido automaticamente pela IA."
+          rows="3"></textarea>
+      </div>
+
+      <!-- NEGATIVE PROMPT -->
+      <div class="field-group">
+        <label class="field-label" for="p3negativeInput">Prompt negativo</label>
+        <textarea id="p3negativeInput" rows="2">deformed, ugly, low quality, blurry, watermark, extra limbs, extra fingers, malformed hands, lowres, bad anatomy, missing limbs, floating limbs</textarea>
+      </div>
+
+      <!-- SEED -->
+      <div class="field-group">
+        <label class="field-label" for="p3seedInput">Seed <span style="color:#444;font-size:0.65rem;">(deixe em branco para aleatório)</span></label>
+        <input id="p3seedInput" type="number" placeholder="ex: 4231567890" style="width:200px;" min="0" max="9999999999" />
+      </div>
+
+      <!-- BOTÃO -->
+      <div class="button-row">
+        <button id="p3generateBtn" onclick="p3generate()">Gerar</button>
+      </div>
+
+      <!-- STATUS -->
+      <div class="status">
+        <div class="spinner" id="p3spinner"></div>
+        <span id="p3statusText"></span>
+      </div>
+
+      <!-- ÁREA DE RESULTADO -->
+      <div class="image-area" id="p3outputArea">
+        <span class="placeholder-text">O resultado gerado aparecerá aqui</span>
+      </div>
+
+      <!-- META-STRIP -->
+      <div class="meta-strip" id="p3metaStrip">
+        <span class="meta-label">Montagem</span>
+        <span class="meta-value" id="p3metaSetup"></span>
+        <span class="meta-dot">·</span>
+        <span class="meta-label">Geração</span>
+        <span class="meta-value" id="p3metaGen"></span>
+        <span class="meta-dot">·</span>
+        <span class="meta-label">Total</span>
+        <span class="meta-value" id="p3metaTotal"></span>
+        <span class="meta-dot">·</span>
+        <span class="meta-value" id="p3metaCost"></span>
+        <span class="meta-dot">·</span>
+        <button class="seed-btn" id="p3metaSeed" title="Clique para copiar o seed"></button>
+      </div>
+
+      <!-- CONFIG -->
+      <div class="config">
+        Workflow: <span id="p3webhookDisplay">— (em breve)</span>
+        &nbsp;&nbsp;·&nbsp;&nbsp;
+        Cotação R$/USD: <input id="p3brlRateInput" type="number" step="0.01" min="0" placeholder="ex: 5.90"
+          style="background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#888;font-size:0.75rem;padding:2px 6px;width:80px;outline:none;">
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -688,18 +837,23 @@
     }
 
     let pendingForcePayload = null;
+    let pendingForceSender = null;
 
     function closeModal() {
       document.getElementById('validationModal').classList.remove('active');
       pendingForcePayload = null;
+      pendingForceSender = null;
       p2setLoading(false);
       p2status.stop();
     }
 
     async function generateForce() {
       document.getElementById('validationModal').classList.remove('active');
-      if (!pendingForcePayload) return;
-      await p2send({ ...pendingForcePayload, force: true });
+      if (!pendingForceSender) return;
+      const fn = pendingForceSender;
+      pendingForceSender = null;
+      pendingForcePayload = null;
+      await fn();
     }
 
     async function p2generate() {
@@ -739,6 +893,7 @@
           const data = await response.json();
           if (data.validated !== undefined) {
             pendingForcePayload = payload;
+            pendingForceSender = () => p2send({ ...payload, force: true });
             const isApproved = data.status === 'approved';
             const isReview = data.status === 'needs_review';
             const modal = document.querySelector('#validationModal .modal');
@@ -798,6 +953,137 @@
 
     document.getElementById('p2promptInput').addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) p2generate();
+    });
+
+    // ---- FASE 03 ----
+    const WEBHOOK_P3 = N8N_BASE + '/webhook/2df67a11-d6e5-4c04-a7e3-0613e7c560cd'; // tLotD-03
+
+    let p3currentMode = 'image';
+    let p3imageBase64 = null;
+
+    function p3setMode(mode) {
+      p3currentMode = mode;
+      document.getElementById('p3modeImage').classList.toggle('active', mode === 'image');
+      document.getElementById('p3modeVideo').classList.toggle('active', mode === 'video');
+    }
+
+    function p3handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        p3imageBase64 = e.target.result;
+        const preview = document.getElementById('p3uploadPreview');
+        preview.src = p3imageBase64;
+        preview.classList.add('visible');
+        document.getElementById('p3uploadLabel').textContent = file.name;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function p3setStatus(msg, isError = false) {
+      const el = document.getElementById('p3statusText');
+      el.textContent = msg;
+      el.style.color = isError ? '#e06c6c' : '#888';
+    }
+
+    function p3setLoading(state) {
+      document.getElementById('p3generateBtn').disabled = state;
+      document.getElementById('p3spinner').style.display = state ? 'block' : 'none';
+    }
+
+    async function p3generate() {
+      const prompt = document.getElementById('p3promptInput').value.trim();
+      if (!prompt) { p3setStatus('Por favor, escreva um prompt antes de gerar.', true); return; }
+
+      const seedVal = document.getElementById('p3seedInput').value.trim();
+      const payload = {
+        prompt,
+        negative_prompt: document.getElementById('p3negativeInput').value.trim(),
+        mode: p3currentMode,
+      };
+      if (seedVal !== '') payload.seed = parseInt(seedVal);
+      if (p3imageBase64) payload.reference_image = p3imageBase64;
+
+      await p3send(payload);
+    }
+
+    async function p3send(payload) {
+      p3setLoading(true);
+      p3setStatus('Enviando...');
+      document.getElementById('p3outputArea').innerHTML = '<span class="placeholder-text">Gerando...</span>';
+
+      try {
+        const response = await fetch(WEBHOOK_P3, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+
+        if (contentType.includes('application/json')) {
+          const data = await response.json();
+          if (data.validated !== undefined) {
+            pendingForcePayload = payload;
+            pendingForceSender = () => p3send({ ...payload, force: true });
+
+            const isApproved = data.status === 'approved';
+            const isReview = data.status === 'needs_review';
+            const modal = document.querySelector('#validationModal .modal');
+            modal.classList.remove('modal-warning', 'modal-approved');
+            if (isReview) modal.classList.add('modal-warning');
+            if (isApproved) modal.classList.add('modal-approved');
+
+            document.querySelector('#validationModal .modal-title').textContent =
+              isApproved ? 'Prompt aprovado' :
+              isReview   ? 'Prompt ambíguo — verificação recomendada' :
+                           'Prompt fora do universo tLotD';
+            document.getElementById('modalReason').textContent = data.reason || '';
+            document.getElementById('modalSuggestion').textContent = data.suggestion || '';
+            document.getElementById('modalForceBtn').textContent = isApproved ? 'Gerar' : 'Gerar mesmo assim';
+
+            document.getElementById('validationModal').classList.add('active');
+            p3setStatus(
+              isApproved ? 'Prompt aprovado — confirme para gerar.' :
+              isReview   ? 'Prompt ambíguo — verifique antes de gerar.' :
+                           'Prompt rejeitado pelo validador de lore.',
+              !isApproved
+            );
+            document.getElementById('p3outputArea').innerHTML = '<span class="placeholder-text">O resultado gerado aparecerá aqui</span>';
+            return;
+          }
+          if (!response.ok) throw new Error(`Erro ${response.status}: ${JSON.stringify(data)}`);
+        }
+
+        if (!response.ok) throw new Error(`Erro ${response.status}`);
+
+        const { totalTime, genTime, seed, costUsd, costBrl } = readMeta(response);
+        const blob = await response.blob();
+        const el = payload.mode === 'video'
+          ? Object.assign(document.createElement('video'), { controls: true, autoplay: true, loop: true, style: 'max-width:100%;max-height:70vh;' })
+          : Object.assign(document.createElement('img'), { alt: payload.prompt, style: 'max-width:100%;max-height:70vh;object-fit:contain;' });
+        el.src = URL.createObjectURL(blob);
+        const area = document.getElementById('p3outputArea');
+        area.innerHTML = '';
+        area.appendChild(el);
+        showMeta('p3', totalTime, genTime, costUsd, costBrl, seed);
+        p3setStatus('Concluído com sucesso.');
+      } catch (err) {
+        p3setStatus('Erro: ' + err.message, true);
+        document.getElementById('p3outputArea').innerHTML = '<span class="placeholder-text">Falha na geração</span>';
+      } finally {
+        p3setLoading(false);
+      }
+    }
+
+    document.getElementById('p3promptInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) p3generate();
+    });
+
+    // BRL rate sync para p3
+    document.getElementById('p3brlRateInput').addEventListener('input', (e) => {
+      localStorage.setItem('brlRate', e.target.value);
     });
   </script>
 </body>
